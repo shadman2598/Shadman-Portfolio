@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#10121c"/><stop offset="100%" stop-color="#1c1a28"/></linearGradient></defs>
+  <rect width="800" height="500" fill="url(#g)"/>
+  <rect x="280" y="140" width="240" height="160" rx="12" fill="none" stroke="#c9a227" stroke-width="2" opacity="0.5"/>
+  <text x="400" y="360" text-anchor="middle" fill="#8b90a5" font-family="system-ui" font-size="22">Portfolio</text>
+</svg>

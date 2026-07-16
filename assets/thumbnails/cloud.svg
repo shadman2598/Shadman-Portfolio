@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs><linearGradient id="g" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0f1520"/><stop offset="100%" stop-color="#1a2840"/></linearGradient></defs>
+  <rect width="800" height="500" fill="url(#g)"/>
+  <path d="M200 350 L300 150 L400 280 L500 120 L600 350" fill="none" stroke="#3dd6c5" stroke-width="2" opacity="0.5"/>
+  <text x="400" y="400" text-anchor="middle" fill="#8b90a5" font-family="system-ui" font-size="24">Cloud Study</text>
+</svg>

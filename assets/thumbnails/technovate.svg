@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#12141f"/><stop offset="100%" stop-color="#1e2238"/></linearGradient></defs>
+  <rect width="800" height="500" fill="url(#g)"/>
+  <circle cx="400" cy="200" r="60" fill="none" stroke="#c9a227" stroke-width="2" opacity="0.4"/>
+  <text x="400" y="320" text-anchor="middle" fill="#8b90a5" font-family="system-ui" font-size="28">Technovate</text>
+</svg>

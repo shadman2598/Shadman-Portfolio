@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Shadman Shakib — Portfolio of creative work, research, and in-progress projects." />
+  <title>Shadman Shakib · Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grain"></div>
+  </div>
+
+  <header class="site-header" id="top">
+    <nav class="nav container">
+      <a class="logo" href="#top">Shadman<span>.</span></a>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#showcase">Showcase</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact" class="nav-cta">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero container">
+      <div class="hero-content reveal">
+        <p class="eyebrow">Portfolio &amp; Creative Work</p>
+        <h1>Building ideas<br /><em>worth funding.</em></h1>
+        <p class="hero-lead">
+          A living portfolio for grant reviewers, collaborators, and curious minds —
+          including work in progress, experiments, and finished pieces across
+          research, code, design, and music.
+        </p>
+        <div class="hero-actions">
+          <a href="#projects" class="btn btn-primary">View active projects</a>
+          <a href="#showcase" class="btn btn-ghost">Browse showcase</a>
+        </div>
+        <div class="hero-stats" id="hero-stats"></div>
+      </div>
+      <div class="hero-visual reveal" style="--delay: 0.15s">
+        <div class="hero-card">
+          <div class="hero-card-glow"></div>
+          <p class="hero-card-label">Currently exploring</p>
+          <h2 id="hero-featured-title">—</h2>
+          <p id="hero-featured-desc" class="hero-card-desc"></p>
+          <div class="hero-card-tags" id="hero-featured-tags"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Projects -->
+    <section class="section projects-section" id="projects">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Front &amp; center</p>
+          <h2>Projects I'm working on</h2>
+          <p class="section-sub">
+            Unfinished work is welcome here — progress, prototypes, and early directions
+            are part of the story.
+          </p>
+        </div>
+        <div class="project-filters reveal" id="project-filters" role="tablist" aria-label="Filter projects"></div>
+        <div class="project-grid" id="project-grid"></div>
+      </div>
+    </section>
+
+    <!-- Showcase -->
+    <section class="section showcase-section" id="showcase">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Archive &amp; artifacts</p>
+          <h2>Creative showcase</h2>
+          <p class="section-sub">
+            PDFs, photography, scripts, websites, music, and more — a curated look at
+            what I've made and what I'm making.
+          </p>
+        </div>
+        <div class="showcase-tabs reveal" id="showcase-tabs" role="tablist" aria-label="Showcase categories"></div>
+        <div class="showcase-grid" id="showcase-grid"></div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="section about-section" id="about">
+      <div class="container about-grid">
+        <div class="about-copy reveal">
+          <p class="eyebrow">About</p>
+          <h2 id="about-name">Shadman Shakib</h2>
+          <p id="about-bio" class="about-bio"></p>
+          <ul class="about-highlights" id="about-highlights"></ul>
+        </div>
+        <div class="about-panel reveal" style="--delay: 0.1s">
+          <h3>Focus areas</h3>
+          <div class="focus-tags" id="focus-tags"></div>
+          <h3>Currently seeking</h3>
+          <p id="about-seeking" class="seeking-text"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section contact-section" id="contact">
+      <div class="container contact-card reveal">
+        <div>
+          <p class="eyebrow">Get in touch</p>
+          <h2>Let's connect</h2>
+          <p class="section-sub">
+            Open to grant conversations, collaborations, and feedback on in-progress work.
+          </p>
+        </div>
+        <div class="contact-links" id="contact-links"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Shadman Shakib</p>
+      <p class="footer-note">Built as a living portfolio — updated as projects evolve.</p>
+    </div>
+  </footer>
+
+  <!-- Modals -->
+  <dialog class="modal" id="detail-modal" aria-labelledby="modal-title">
+    <div class="modal-inner">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </dialog>
+
+  <dialog class="modal lightbox" id="lightbox-modal" aria-label="Image preview">
+    <button class="modal-close lightbox-close" aria-label="Close">&times;</button>
+    <img id="lightbox-img" src="" alt="" />
+    <p id="lightbox-caption" class="lightbox-caption"></p>
+  </dialog>
+
+  <script src="js/content.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

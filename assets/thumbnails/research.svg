@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0f1419"/><stop offset="100%" stop-color="#1a2530"/></linearGradient></defs>
+  <rect width="800" height="500" fill="url(#g)"/>
+  <line x1="250" y1="180" x2="550" y2="180" stroke="#3dd6c5" stroke-width="2" opacity="0.3"/>
+  <line x1="250" y1="220" x2="500" y2="220" stroke="#3dd6c5" stroke-width="2" opacity="0.2"/>
+  <line x1="250" y1="260" x2="520" y2="260" stroke="#3dd6c5" stroke-width="2" opacity="0.15"/>
+  <text x="400" y="340" text-anchor="middle" fill="#8b90a5" font-family="system-ui" font-size="22">Research</text>
+</svg>
