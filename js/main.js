@@ -1,32 +1,12 @@
 /**
- * Portfolio interactivity — renders content, filters, modals, players
+ * Portfolio interactivity — charity goals, photo/script uploads, gallery
  */
 (function () {
   "use strict";
 
-  const { profile, projects, showcase } = PORTFOLIO;
-
-  const STATUS_LABELS = {
-    "in-progress": "In Progress",
-    prototype: "Prototype",
-    complete: "Complete",
-  };
-
-  const TYPE_LABELS = {
-    pdf: "PDF",
-    photo: "Photo",
-    script: "Script",
-    website: "Website",
-    song: "Song",
-  };
-
-  const TYPE_ICONS = {
-    pdf: "📄",
-    photo: "📷",
-    script: "⌨",
-    website: "🌐",
-    song: "🎵",
-  };
+  const { profile, charity } = PORTFOLIO;
+  const PHOTO_KEY = "portfolio_photos_v1";
+  const SCRIPT_KEY = "portfolio_scripts_v1";
 
   /* ── Helpers ── */
   function el(tag, attrs = {}, children = []) {
@@ -34,8 +14,12 @@
     Object.entries(attrs).forEach(([k, v]) => {
       if (k === "className") node.className = v;
       else if (k === "text") node.textContent = v;
-      else if (k.startsWith("on")) node.addEventListener(k.slice(2).toLowerCase(), v);
-      else node.setAttribute(k, v);
+      else if (k === "html") node.innerHTML = v;
+      else if (k.startsWith("on") && typeof v === "function") {
+        node.addEventListener(k.slice(2).toLowerCase(), v);
+      } else if (v !== undefined && v !== null) {
+        node.setAttribute(k, v);
+      }
     });
     (Array.isArray(children) ? children : [children])
       .filter(Boolean)
@@ -43,381 +27,304 @@
     return node;
   }
 
-  function placeholderThumb(label) {
-    return el("div", { className: "project-thumb-placeholder" }, label.charAt(0));
+  function uid() {
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   }
 
-  /* ── Hero stats ── */
-  function renderHeroStats() {
-    const inProgress = projects.filter((p) => p.status === "in-progress").length;
-    const total = projects.length;
-    const showcaseCount = showcase.length;
+  function loadStore(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || "[]");
+    } catch {
+      return [];
+    }
+  }
 
-    const stats = [
-      { value: inProgress, label: "Active projects" },
-      { value: total, label: "Total projects" },
-      { value: showcaseCount, label: "Showcase items" },
-    ];
+  function saveStore(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (err) {
+      alert("Storage is full. Try uploading smaller files, or remove some items first.");
+      console.error(err);
+    }
+  }
 
-    const container = document.getElementById("hero-stats");
-    container.innerHTML = "";
-    stats.forEach((s) => {
-      container.append(
-        el("div", { className: "stat-item" }, [
-          el("strong", { text: String(s.value) }),
-          el("span", { text: s.label }),
+  function extLanguage(filename) {
+    const ext = filename.split(".").pop()?.toLowerCase() || "";
+    const map = {
+      js: "JavaScript", ts: "TypeScript", py: "Python", sh: "Bash", bash: "Bash",
+      rb: "Ruby", go: "Go", rs: "Rust", java: "Java", c: "C", cpp: "C++",
+      h: "C/C++", css: "CSS", html: "HTML", json: "JSON", md: "Markdown",
+      sql: "SQL", yml: "YAML", yaml: "YAML", txt: "Text",
+    };
+    return map[ext] || ext.toUpperCase() || "Script";
+  }
+
+  /* ── Charity goals ── */
+  function renderGoals() {
+    const grid = document.getElementById("goals-grid");
+    if (!grid || !charity?.goals) return;
+    grid.innerHTML = "";
+    charity.goals.forEach((goal, i) => {
+      grid.append(
+        el("article", {
+          className: "goal-card reveal",
+          style: `--delay: ${i * 0.06}s`,
+        }, [
+          el("span", { className: "goal-icon", text: goal.icon }),
+          el("h3", { text: goal.title }),
+          el("p", { text: goal.description }),
         ])
       );
     });
   }
 
-  /* ── Featured project in hero card ── */
-  function renderHeroFeatured() {
-    const featured = projects.find((p) => p.featured) || projects[0];
-    if (!featured) return;
-
-    document.getElementById("hero-featured-title").textContent = featured.title;
-    document.getElementById("hero-featured-desc").textContent = featured.description;
-
-    const tagsEl = document.getElementById("hero-featured-tags");
-    tagsEl.innerHTML = "";
-    featured.tags.forEach((t) => tagsEl.append(el("span", { className: "tag" }, t)));
+  /* ── Photos ── */
+  function getPhotos() {
+    const seeded = (PORTFOLIO.photos || []).map((p) => ({ ...p, permanent: true }));
+    return [...seeded, ...loadStore(PHOTO_KEY)];
   }
 
-  /* ── Project cards ── */
-  let activeProjectFilter = "all";
-
-  function renderProjectFilters() {
-    const statuses = ["all", ...new Set(projects.map((p) => p.status))];
-    const container = document.getElementById("project-filters");
-    container.innerHTML = "";
-
-    const labels = { all: "All" };
-    statuses.forEach((s) => {
-      if (s !== "all") labels[s] = STATUS_LABELS[s] || s;
-    });
-
-    statuses.forEach((status) => {
-      const btn = el("button", {
-        className: `filter-btn${status === activeProjectFilter ? " active" : ""}`,
-        role: "tab",
-        "aria-selected": status === activeProjectFilter,
-        onClick: () => {
-          activeProjectFilter = status;
-          renderProjectFilters();
-          renderProjects();
-        },
-      }, labels[status] || status);
-      container.append(btn);
-    });
-  }
-
-  function renderProjects() {
-    const grid = document.getElementById("project-grid");
+  function renderPhotos() {
+    const grid = document.getElementById("photo-grid");
+    const empty = document.getElementById("photo-empty");
+    const photos = getPhotos();
     grid.innerHTML = "";
 
-    const filtered =
-      activeProjectFilter === "all"
-        ? projects
-        : projects.filter((p) => p.status === activeProjectFilter);
+    if (!photos.length) {
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
 
-    filtered.forEach((project, i) => {
-      const card = el("article", {
-        className: `project-card reveal${project.featured ? " featured" : ""}`,
-        style: `--delay: ${i * 0.06}s`,
-        onClick: () => openProjectModal(project),
+    photos.forEach((photo, i) => {
+      const card = el("figure", {
+        className: "photo-card reveal",
+        style: `--delay: ${i * 0.04}s`,
       });
 
-      const thumb = el("div", { className: "project-thumb" });
-      const img = new Image();
-      img.alt = project.title;
-      img.onload = () => thumb.append(img);
-      img.onerror = () => thumb.append(placeholderThumb(project.title));
-      img.src = project.image;
+      const img = el("img", {
+        src: photo.src,
+        alt: photo.title || "Uploaded photo",
+        loading: "lazy",
+      });
+      img.addEventListener("click", () => openLightbox(photo.src, photo.title || photo.name || "Photo"));
 
-      const body = el("div", { className: "project-body" }, [
-        el("div", { className: "project-meta" }, [
-          el("span", {
-            className: `status-badge ${project.status}`,
-            text: STATUS_LABELS[project.status] || project.status,
-          }),
-          el("span", { className: "project-year", text: project.year }),
-        ]),
-        el("h3", { text: project.title }),
-        el("p", { text: project.description }),
+      const caption = el("figcaption", { className: "photo-caption" }, [
+        el("span", { text: photo.title || photo.name || "Untitled" }),
       ]);
 
-      if (project.progress < 100) {
-        body.append(
-          el("div", { className: "progress-bar" }, [
-            el("div", {
-              className: "progress-fill",
-              style: `width: ${project.progress}%`,
-            }),
-          ])
+      if (!photo.permanent) {
+        caption.append(
+          el("button", {
+            className: "item-delete",
+            type: "button",
+            "aria-label": "Remove photo",
+            title: "Remove",
+            onClick: (e) => {
+              e.stopPropagation();
+              removePhoto(photo.id);
+            },
+          }, "×")
         );
       }
 
-      const tags = el("div", { className: "project-tags" });
-      project.tags.forEach((t) => tags.append(el("span", { className: "tag" }, t)));
-      body.append(tags);
-
-      card.append(thumb, body);
+      card.append(img, caption);
       grid.append(card);
     });
 
     observeReveals();
   }
 
-  function openProjectModal(project) {
-    const modal = document.getElementById("detail-modal");
-    const body = document.getElementById("modal-body");
-    body.innerHTML = "";
+  function removePhoto(id) {
+    const next = loadStore(PHOTO_KEY).filter((p) => p.id !== id);
+    saveStore(PHOTO_KEY, next);
+    renderPhotos();
+  }
 
-    body.append(
-      el("span", {
-        className: `status-badge ${project.status}`,
-        text: STATUS_LABELS[project.status],
-      }),
-      el("h2", { id: "modal-title", text: project.title }),
-      el("p", { text: project.description }),
-    );
+  async function handlePhotoFiles(files) {
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (!list.length) return;
 
-    if (project.progress < 100) {
-      body.append(
-        el("p", { text: `Progress: ${project.progress}%` }),
-        el("div", { className: "progress-bar" }, [
-          el("div", {
-            className: "progress-fill",
-            style: `width: ${project.progress}%`,
+    const stored = loadStore(PHOTO_KEY);
+    for (const file of list) {
+      const src = await readAsDataURL(file);
+      stored.unshift({
+        id: uid(),
+        name: file.name,
+        title: file.name.replace(/\.[^.]+$/, ""),
+        src,
+        uploadedAt: new Date().toISOString(),
+      });
+    }
+    saveStore(PHOTO_KEY, stored);
+    renderPhotos();
+  }
+
+  /* ── Scripts ── */
+  function getScripts() {
+    const seeded = (PORTFOLIO.scripts || []).map((s) => ({ ...s, permanent: !!s.permanent }));
+    return [...seeded, ...loadStore(SCRIPT_KEY)];
+  }
+
+  function renderScripts() {
+    const list = document.getElementById("script-list");
+    const empty = document.getElementById("script-empty");
+    const scripts = getScripts();
+    list.innerHTML = "";
+
+    if (!scripts.length) {
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+
+    scripts.forEach((script, i) => {
+      const card = el("article", {
+        className: "script-card reveal",
+        style: `--delay: ${i * 0.05}s`,
+      });
+
+      const header = el("div", { className: "script-card-head" }, [
+        el("div", {}, [
+          el("h3", { text: script.title || script.name }),
+          el("span", {
+            className: "script-lang",
+            text: script.language || extLanguage(script.name || ""),
           }),
-        ])
-      );
-    }
+        ]),
+      ]);
 
-    const tagWrap = el("div", { className: "project-tags" });
-    project.tags.forEach((t) => tagWrap.append(el("span", { className: "tag" }, t)));
-    body.append(tagWrap);
+      if (!script.permanent) {
+        header.append(
+          el("button", {
+            className: "item-delete",
+            type: "button",
+            "aria-label": "Remove script",
+            onClick: () => removeScript(script.id),
+          }, "×")
+        );
+      }
 
-    if (project.link && project.link !== "#") {
-      body.append(
-        el("a", {
-          href: project.link,
-          className: "btn btn-primary",
-          target: "_blank",
-          rel: "noopener",
-          style: "margin-top: 20px; display: inline-flex;",
-        }, "View project →")
-      );
-    }
+      const preview = el("pre", {
+        className: "script-preview",
+        text: (script.preview || script.content || "").slice(0, 400),
+      });
 
-    modal.showModal();
-  }
+      const actions = el("div", { className: "showcase-actions" }, [
+        el("button", {
+          className: "showcase-btn primary",
+          type: "button",
+          onClick: () => openScriptModal(script),
+        }, "Preview"),
+      ]);
 
-  /* ── Showcase ── */
-  let activeShowcaseTab = "all";
-
-  function renderShowcaseTabs() {
-    const types = ["all", ...new Set(showcase.map((s) => s.type))];
-    const container = document.getElementById("showcase-tabs");
-    container.innerHTML = "";
-
-    types.forEach((type) => {
-      const btn = el("button", {
-        className: `tab-btn${type === activeShowcaseTab ? " active" : ""}`,
-        role: "tab",
-        onClick: () => {
-          activeShowcaseTab = type;
-          renderShowcaseTabs();
-          renderShowcase();
-        },
-      }, type === "all" ? "All" : TYPE_LABELS[type] || type);
-      container.append(btn);
-    });
-  }
-
-  function renderShowcase() {
-    const grid = document.getElementById("showcase-grid");
-    grid.innerHTML = "";
-
-    const filtered =
-      activeShowcaseTab === "all"
-        ? showcase
-        : showcase.filter((s) => s.type === activeShowcaseTab);
-
-    filtered.forEach((item, i) => {
-      grid.append(buildShowcaseCard(item, i));
+      card.append(header, preview, actions);
+      list.append(card);
     });
 
     observeReveals();
   }
 
-  function buildShowcaseCard(item, index) {
-    const card = el("article", {
-      className: "showcase-card reveal",
-      style: `--delay: ${index * 0.05}s`,
-    });
-
-    const visual = el("div", { className: "showcase-visual" });
-    visual.append(
-      el("span", { className: "showcase-type-label", text: TYPE_LABELS[item.type] })
-    );
-
-    const thumbSrc = item.thumbnail || item.cover || item.file;
-    if (thumbSrc && (item.type === "photo" || item.thumbnail || item.cover)) {
-      const img = new Image();
-      img.alt = item.title;
-      img.onerror = () => {
-        img.remove();
-        visual.append(el("span", { className: "showcase-icon", text: TYPE_ICONS[item.type] }));
-      };
-      img.src = thumbSrc;
-      visual.append(img);
-    } else {
-      visual.append(el("span", { className: "showcase-icon", text: TYPE_ICONS[item.type] }));
-    }
-
-    const body = el("div", { className: "showcase-body" }, [
-      el("h3", { text: item.title }),
-      el("p", { text: item.description }),
-    ]);
-
-    if (item.type === "script" && item.preview) {
-      body.append(el("pre", { className: "script-preview" }, item.preview));
-    }
-
-    if (item.type === "song") {
-      body.append(buildAudioPlayer(item));
-    } else {
-      body.append(buildShowcaseActions(item));
-    }
-
-    card.append(visual, body);
-    return card;
+  function removeScript(id) {
+    const next = loadStore(SCRIPT_KEY).filter((s) => s.id !== id);
+    saveStore(SCRIPT_KEY, next);
+    renderScripts();
   }
 
-  function buildShowcaseActions(item) {
-    const actions = el("div", { className: "showcase-actions" });
+  async function handleScriptFiles(files) {
+    const list = Array.from(files);
+    if (!list.length) return;
 
-    if (item.type === "pdf") {
-      actions.append(
-        el("a", {
-          href: item.file,
-          className: "showcase-btn primary",
-          target: "_blank",
-          rel: "noopener",
-        }, "Open PDF"),
-        el("a", {
-          href: item.file,
-          className: "showcase-btn",
-          download: "",
-        }, "Download")
-      );
-    } else if (item.type === "photo") {
-      actions.append(
-        el("button", {
-          className: "showcase-btn primary",
-          onClick: () => openLightbox(item.file, item.title),
-        }, "View full size")
-      );
-    } else if (item.type === "script") {
-      actions.append(
-        el("a", {
-          href: item.file,
-          className: "showcase-btn primary",
-          target: "_blank",
-          rel: "noopener",
-        }, "View file"),
-        el("button", {
-          className: "showcase-btn",
-          onClick: () => openScriptModal(item),
-        }, "Preview")
-      );
-    } else if (item.type === "website") {
-      actions.append(
-        el("a", {
-          href: item.url,
-          className: "showcase-btn primary",
-          target: "_blank",
-          rel: "noopener",
-        }, "Visit site →")
-      );
+    const stored = loadStore(SCRIPT_KEY);
+    for (const file of list) {
+      const content = await readAsText(file);
+      stored.unshift({
+        id: uid(),
+        name: file.name,
+        title: file.name,
+        language: extLanguage(file.name),
+        description: `Uploaded ${new Date().toLocaleDateString()}`,
+        preview: content.slice(0, 800),
+        content,
+        uploadedAt: new Date().toISOString(),
+      });
     }
-
-    return actions;
+    saveStore(SCRIPT_KEY, stored);
+    renderScripts();
   }
 
-  function buildAudioPlayer(item) {
-    const audio = new Audio(item.file);
-    let playing = false;
-
-    const playBtn = el("button", { text: "▶" });
-    const durationEl = el("span", { className: "audio-duration", text: item.duration || "" });
-
-    playBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (playing) {
-        audio.pause();
-        playBtn.textContent = "▶";
-        playing = false;
-      } else {
-        document.querySelectorAll("audio").forEach((a) => a.pause());
-        audio.play().catch(() => {});
-        playBtn.textContent = "❚❚";
-        playing = true;
-      }
-    });
-
-    audio.addEventListener("ended", () => {
-      playBtn.textContent = "▶";
-      playing = false;
-    });
-
-    const cover = item.cover
-      ? el("img", { className: "audio-cover", src: item.cover, alt: item.title })
-      : el("div", { className: "audio-cover", style: "display:flex;align-items:center;justify-content:center;font-size:1.2rem;" }, "🎵");
-
-    cover.onerror = () => {
-      cover.replaceWith(
-        el("div", { className: "audio-cover", style: "display:flex;align-items:center;justify-content:center;font-size:1.2rem;" }, "🎵")
-      );
-    };
-
-    return el("div", { className: "audio-player" }, [
-      cover,
-      el("div", { className: "audio-controls" }, [
-        el("div", { className: "audio-title", text: item.title }),
-        durationEl,
-        playBtn,
-      ]),
-    ]);
-  }
-
-  function openLightbox(src, caption) {
-    const modal = document.getElementById("lightbox-modal");
-    const img = document.getElementById("lightbox-img");
-    img.src = src;
-    img.alt = caption;
-    document.getElementById("lightbox-caption").textContent = caption;
-    modal.showModal();
-  }
-
-  function openScriptModal(item) {
+  function openScriptModal(script) {
     const modal = document.getElementById("detail-modal");
     const body = document.getElementById("modal-body");
     body.innerHTML = "";
     body.append(
-      el("h2", { id: "modal-title", text: item.title }),
-      el("p", { text: `${item.language || "Script"} · ${item.year}` }),
-      el("pre", { className: "script-preview", style: "max-height: 400px;" }, item.preview || "// No preview available"),
-      el("a", {
-        href: item.file,
-        className: "btn btn-primary",
-        target: "_blank",
-        style: "margin-top: 16px; display: inline-flex;",
-      }, "Open full file →")
+      el("h2", { id: "modal-title", text: script.title || script.name }),
+      el("p", { text: `${script.language || "Script"}${script.description ? " · " + script.description : ""}` }),
+      el("pre", {
+        className: "script-preview script-preview-full",
+        text: script.content || script.preview || "// Empty",
+      })
     );
     modal.showModal();
+  }
+
+  /* ── File readers ── */
+  function readAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function readAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+
+  /* ── Upload zones ── */
+  function setupUploadZone(zoneId, inputId, handler) {
+    const zone = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
+    if (!zone || !input) return;
+
+    const openPicker = () => input.click();
+
+    zone.addEventListener("click", openPicker);
+    zone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openPicker();
+      }
+    });
+
+    input.addEventListener("change", () => {
+      if (input.files?.length) handler(input.files);
+      input.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach((evt) => {
+      zone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        zone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((evt) => {
+      zone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        zone.classList.remove("dragover");
+      });
+    });
+
+    zone.addEventListener("drop", (e) => {
+      if (e.dataTransfer?.files?.length) handler(e.dataTransfer.files);
+    });
   }
 
   /* ── About & Contact ── */
@@ -448,7 +355,15 @@
     });
   }
 
-  /* ── Modals close ── */
+  /* ── Lightbox & modals ── */
+  function openLightbox(src, caption) {
+    const modal = document.getElementById("lightbox-modal");
+    document.getElementById("lightbox-img").src = src;
+    document.getElementById("lightbox-img").alt = caption;
+    document.getElementById("lightbox-caption").textContent = caption;
+    modal.showModal();
+  }
+
   function setupModals() {
     document.querySelectorAll(".modal").forEach((modal) => {
       modal.querySelector(".modal-close")?.addEventListener("click", () => modal.close());
@@ -458,7 +373,6 @@
     });
   }
 
-  /* ── Mobile nav ── */
   function setupNav() {
     const toggle = document.querySelector(".nav-toggle");
     const links = document.querySelector(".nav-links");
@@ -488,20 +402,21 @@
         { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
       );
     }
-    document.querySelectorAll(".reveal:not(.visible)").forEach((el) => revealObserver.observe(el));
+    document.querySelectorAll(".reveal:not(.visible)").forEach((node) => {
+      revealObserver.observe(node);
+    });
   }
 
   /* ── Init ── */
   function init() {
     document.getElementById("year").textContent = new Date().getFullYear();
-    renderHeroStats();
-    renderHeroFeatured();
-    renderProjectFilters();
-    renderProjects();
-    renderShowcaseTabs();
-    renderShowcase();
+    renderGoals();
+    renderPhotos();
+    renderScripts();
     renderAbout();
     renderContact();
+    setupUploadZone("photo-upload-zone", "photo-input", handlePhotoFiles);
+    setupUploadZone("script-upload-zone", "script-input", handleScriptFiles);
     setupModals();
     setupNav();
     observeReveals();

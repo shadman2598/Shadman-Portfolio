@@ -3,18 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Shadman Shakib — Portfolio of creative work, research, and in-progress projects." />
+  <meta name="description" content="Shadman Shakib — Portfolio featuring Zarish Charity, photography, and scripts." />
   <title>Shadman Shakib · Portfolio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=7" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
+    <div class="sakura sakura-left">
+      <span class="branch branch-a"></span>
+      <span class="branch branch-b"></span>
+      <i style="--x:12%;--y:8%;--s:.85;--r:-12deg"></i>
+      <i style="--x:30%;--y:18%;--s:1.15;--r:18deg"></i>
+      <i style="--x:48%;--y:30%;--s:.75;--r:5deg"></i>
+      <i style="--x:64%;--y:45%;--s:1;--r:-20deg"></i>
+      <i style="--x:80%;--y:58%;--s:.65;--r:25deg"></i>
+    </div>
+    <div class="sakura sakura-right">
+      <span class="branch branch-a"></span>
+      <span class="branch branch-b"></span>
+      <i style="--x:15%;--y:10%;--s:1.1;--r:15deg"></i>
+      <i style="--x:32%;--y:25%;--s:.7;--r:-8deg"></i>
+      <i style="--x:50%;--y:38%;--s:1;--r:24deg"></i>
+      <i style="--x:68%;--y:53%;--s:.8;--r:-18deg"></i>
+      <i style="--x:84%;--y:68%;--s:1.2;--r:10deg"></i>
+    </div>
+    <div class="falling-petals">
+      <i style="--left:8%;--delay:-2s;--duration:13s"></i>
+      <i style="--left:24%;--delay:-8s;--duration:17s"></i>
+      <i style="--left:43%;--delay:-4s;--duration:15s"></i>
+      <i style="--left:67%;--delay:-11s;--duration:18s"></i>
+      <i style="--left:86%;--delay:-6s;--duration:14s"></i>
+    </div>
     <div class="grain"></div>
   </div>
 
@@ -25,71 +50,45 @@
         <span></span><span></span>
       </button>
       <ul class="nav-links">
-        <li><a href="#projects">Projects</a></li>
-        <li><a href="#showcase">Showcase</a></li>
         <li><a href="#about">About</a></li>
+        <li><a href="#charity">Zarish</a></li>
+        <li><a href="#photos">Photos</a></li>
+        <li><a href="#scripts">Scripts</a></li>
         <li><a href="#contact" class="nav-cta">Contact</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
-    <!-- Hero -->
+    <!-- Personal portfolio hero -->
     <section class="hero container">
-      <div class="hero-content reveal">
-        <p class="eyebrow">Portfolio &amp; Creative Work</p>
-        <h1>Building ideas<br /><em>worth funding.</em></h1>
+      <div class="hero-content">
+        <p class="eyebrow">Shadman Shakib · Portfolio</p>
+        <h1>Creating with purpose.<br /><em>Building for impact.</em></h1>
         <p class="hero-lead">
-          A living portfolio for grant reviewers, collaborators, and curious minds —
-          including work in progress, experiments, and finished pieces across
-          research, code, design, and music.
+          I’m a builder, creative, and community-minded problem solver. This portfolio
+          brings together my charitable work, photography, scripts, and projects in progress.
         </p>
         <div class="hero-actions">
-          <a href="#projects" class="btn btn-primary">View active projects</a>
-          <a href="#showcase" class="btn btn-ghost">Browse showcase</a>
+          <a href="#about" class="btn btn-primary">About me</a>
+          <a href="#charity" class="btn btn-ghost">Explore my work</a>
         </div>
-        <div class="hero-stats" id="hero-stats"></div>
       </div>
-      <div class="hero-visual reveal" style="--delay: 0.15s">
+      <div class="hero-visual">
         <div class="hero-card">
           <div class="hero-card-glow"></div>
-          <p class="hero-card-label">Currently exploring</p>
-          <h2 id="hero-featured-title">—</h2>
-          <p id="hero-featured-desc" class="hero-card-desc"></p>
-          <div class="hero-card-tags" id="hero-featured-tags"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Active Projects -->
-    <section class="section projects-section" id="projects">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow">Front &amp; center</p>
-          <h2>Projects I'm working on</h2>
-          <p class="section-sub">
-            Unfinished work is welcome here — progress, prototypes, and early directions
-            are part of the story.
+          <p class="hero-card-label">What I do</p>
+          <h2>Ideas into action</h2>
+          <p class="hero-card-desc">
+            I combine technology, storytelling, and service to create work that is
+            useful, thoughtful, and connected to real people.
           </p>
+          <div class="hero-card-tags">
+            <span class="tag">Community</span>
+            <span class="tag">Photography</span>
+            <span class="tag">Code</span>
+          </div>
         </div>
-        <div class="project-filters reveal" id="project-filters" role="tablist" aria-label="Filter projects"></div>
-        <div class="project-grid" id="project-grid"></div>
-      </div>
-    </section>
-
-    <!-- Showcase -->
-    <section class="section showcase-section" id="showcase">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow">Archive &amp; artifacts</p>
-          <h2>Creative showcase</h2>
-          <p class="section-sub">
-            PDFs, photography, scripts, websites, music, and more — a curated look at
-            what I've made and what I'm making.
-          </p>
-        </div>
-        <div class="showcase-tabs reveal" id="showcase-tabs" role="tablist" aria-label="Showcase categories"></div>
-        <div class="showcase-grid" id="showcase-grid"></div>
       </div>
     </section>
 
@@ -97,7 +96,7 @@
     <section class="section about-section" id="about">
       <div class="container about-grid">
         <div class="about-copy reveal">
-          <p class="eyebrow">About</p>
+          <p class="eyebrow">About me</p>
           <h2 id="about-name">Shadman Shakib</h2>
           <p id="about-bio" class="about-bio"></p>
           <ul class="about-highlights" id="about-highlights"></ul>
@@ -111,6 +110,100 @@
       </div>
     </section>
 
+    <!-- Prominent Zarish website link -->
+    <section class="zarish-link-section" aria-label="Visit Zarish Charity">
+      <div class="container">
+        <a class="zarish-feature-link" href="https://zarishcharity.org/" target="_blank" rel="noopener">
+          <div class="zarish-feature-copy">
+            <p class="eyebrow">My charity website</p>
+            <h2>Zarish Charity</h2>
+            <p>
+              Discover our mission, current initiatives, and the work we’re doing
+              to help communities across Canada and around the world.
+            </p>
+          </div>
+          <span class="zarish-feature-button">Visit zarishcharity.org <b>↗</b></span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Charity goals -->
+    <section class="section charity-section" id="charity">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Featured work · Zarish Charity</p>
+          <h2>Helping people across Canada &amp; globally</h2>
+          <p class="section-sub">
+            Founded by the Zakir, Rima, and Shadman families, Zarish exists to create lasting
+            change — addressing immediate needs while building long-term solutions for
+            vulnerable communities at home and abroad.
+          </p>
+        </div>
+
+        <div class="goals-grid" id="goals-grid"></div>
+
+        <div class="charity-cta reveal">
+          <div>
+            <h3>See the full story</h3>
+            <p>Donate, explore initiatives, and learn more on the official Zarish Charity website.</p>
+          </div>
+          <a href="https://zarishcharity.org/" class="btn btn-primary" target="_blank" rel="noopener">zarishcharity.org</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Photos -->
+    <section class="section photos-section" id="photos">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Gallery</p>
+          <h2>Photos</h2>
+          <p class="section-sub">
+            Upload and showcase pictures from projects, events, and creative work.
+            Images stay in this browser until you add them to the site permanently.
+          </p>
+        </div>
+
+        <div class="upload-zone reveal" id="photo-upload-zone" tabindex="0" role="button" aria-label="Upload photos">
+          <input type="file" id="photo-input" accept="image/*" multiple hidden />
+          <div class="upload-zone-inner">
+            <span class="upload-icon">📷</span>
+            <p><strong>Drop photos here</strong> or click to browse</p>
+            <p class="upload-hint">JPG, PNG, WebP — multiple files supported</p>
+          </div>
+        </div>
+
+        <div class="photo-grid" id="photo-grid"></div>
+        <p class="empty-state" id="photo-empty">No photos yet — upload your first image above.</p>
+      </div>
+    </section>
+
+    <!-- Scripts -->
+    <section class="section scripts-section" id="scripts">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Code &amp; automation</p>
+          <h2>Scripts</h2>
+          <p class="section-sub">
+            Upload scripts and code files to share with grant reviewers and collaborators.
+            Preview them right here in the browser.
+          </p>
+        </div>
+
+        <div class="upload-zone reveal" id="script-upload-zone" tabindex="0" role="button" aria-label="Upload scripts">
+          <input type="file" id="script-input" accept=".js,.ts,.py,.sh,.bash,.rb,.go,.rs,.java,.c,.cpp,.h,.css,.html,.json,.md,.sql,.yml,.yaml,.txt" multiple hidden />
+          <div class="upload-zone-inner">
+            <span class="upload-icon">⌨</span>
+            <p><strong>Drop scripts here</strong> or click to browse</p>
+            <p class="upload-hint">.py, .sh, .js, .ts, and more</p>
+          </div>
+        </div>
+
+        <div class="script-list" id="script-list"></div>
+        <p class="empty-state" id="script-empty">No scripts yet — upload your first file above.</p>
+      </div>
+    </section>
+
     <!-- Contact -->
     <section class="section contact-section" id="contact">
       <div class="container contact-card reveal">
@@ -118,7 +211,7 @@
           <p class="eyebrow">Get in touch</p>
           <h2>Let's connect</h2>
           <p class="section-sub">
-            Open to grant conversations, collaborations, and feedback on in-progress work.
+            Open to grant conversations, charity partnerships, and collaboration.
           </p>
         </div>
         <div class="contact-links" id="contact-links"></div>
@@ -129,7 +222,10 @@
   <footer class="site-footer">
     <div class="container footer-inner">
       <p>&copy; <span id="year"></span> Shadman Shakib</p>
-      <p class="footer-note">Built as a living portfolio — updated as projects evolve.</p>
+      <p class="footer-note">
+        <a href="https://zarishcharity.org/" target="_blank" rel="noopener">Zarish Charity</a>
+        · Portfolio
+      </p>
     </div>
   </footer>
 
@@ -147,7 +243,7 @@
     <p id="lightbox-caption" class="lightbox-caption"></p>
   </dialog>
 
-  <script src="js/content.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/content.js?v=9"></script>
+  <script src="js/main.js?v=9"></script>
 </body>
 </html>
