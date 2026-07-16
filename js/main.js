@@ -1,5 +1,5 @@
 /**
- * Portfolio interactivity — charity goals, photo/script uploads, gallery
+ * Portfolio interactivity — charity goals, Supabase Storage photos/scripts
  */
 (function () {
   "use strict";
@@ -7,6 +7,9 @@
   const { profile, charity } = PORTFOLIO;
   const PHOTO_KEY = "portfolio_photos_v1";
   const SCRIPT_KEY = "portfolio_scripts_v1";
+
+  let cloudPhotos = [];
+  let cloudScripts = [];
 
   /* ── Helpers ── */
   function el(tag, attrs = {}, children = []) {
@@ -48,6 +51,18 @@
     }
   }
 
+  function useCloud() {
+    return Boolean(window.PortfolioStorage?.isConfigured?.());
+  }
+
+  function setUploadStatus(kind, message, isError) {
+    const node = document.getElementById(`${kind}-upload-status`);
+    if (!node) return;
+    node.hidden = !message;
+    node.textContent = message || "";
+    node.classList.toggle("is-error", Boolean(isError));
+  }
+
   function extLanguage(filename) {
     const ext = filename.split(".").pop()?.toLowerCase() || "";
     const map = {
@@ -81,6 +96,19 @@
   /* ── Photos ── */
   function getPhotos() {
     const seeded = (PORTFOLIO.photos || []).map((p) => ({ ...p, permanent: true }));
+    if (useCloud()) {
+      return [
+        ...seeded,
+        ...cloudPhotos.map((p) => ({
+          id: p.path,
+          name: p.name,
+          title: p.name.replace(/\.[^.]+$/, ""),
+          src: p.src,
+          path: p.path,
+          cloud: true,
+        })),
+      ];
+    }
     return [...seeded, ...loadStore(PHOTO_KEY)];
   }
 
@@ -92,6 +120,9 @@
 
     if (!photos.length) {
       empty.hidden = false;
+      empty.textContent = useCloud()
+        ? "No photos in Supabase yet — upload your first image above."
+        : "No photos yet — upload your first image above.";
       return;
     }
     empty.hidden = true;
@@ -122,7 +153,7 @@
             title: "Remove",
             onClick: (e) => {
               e.stopPropagation();
-              removePhoto(photo.id);
+              removePhoto(photo);
             },
           }, "×")
         );
@@ -135,8 +166,20 @@
     observeReveals();
   }
 
-  function removePhoto(id) {
-    const next = loadStore(PHOTO_KEY).filter((p) => p.id !== id);
+  async function removePhoto(photo) {
+    if (useCloud() && photo.path) {
+      setUploadStatus("photo", "Removing…");
+      const { error } = await PortfolioStorage.removeFile("photos", photo.path);
+      if (error) {
+        setUploadStatus("photo", error.message || "Could not remove photo.", true);
+        return;
+      }
+      await refreshCloudPhotos();
+      setUploadStatus("photo", "");
+      return;
+    }
+
+    const next = loadStore(PHOTO_KEY).filter((p) => p.id !== photo.id);
     saveStore(PHOTO_KEY, next);
     renderPhotos();
   }
@@ -144,6 +187,20 @@
   async function handlePhotoFiles(files) {
     const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (!list.length) return;
+
+    if (useCloud()) {
+      setUploadStatus("photo", `Uploading ${list.length} photo${list.length > 1 ? "s" : ""} to Supabase…`);
+      for (const file of list) {
+        const { error } = await PortfolioStorage.uploadFile("photos", file);
+        if (error) {
+          setUploadStatus("photo", error.message || "Upload failed.", true);
+          return;
+        }
+      }
+      await refreshCloudPhotos();
+      setUploadStatus("photo", "Uploaded to Supabase Storage.");
+      return;
+    }
 
     const stored = loadStore(PHOTO_KEY);
     for (const file of list) {
@@ -158,11 +215,40 @@
     }
     saveStore(PHOTO_KEY, stored);
     renderPhotos();
+    setUploadStatus("photo", "Saved in this browser (add Supabase keys for cloud storage).");
+  }
+
+  async function refreshCloudPhotos() {
+    const { data, error } = await PortfolioStorage.listFiles("photos");
+    if (error) {
+      console.error(error);
+      setUploadStatus("photo", error.message || "Could not load photos from Supabase.", true);
+      cloudPhotos = [];
+    } else {
+      cloudPhotos = data;
+    }
+    renderPhotos();
   }
 
   /* ── Scripts ── */
   function getScripts() {
     const seeded = (PORTFOLIO.scripts || []).map((s) => ({ ...s, permanent: !!s.permanent }));
+    if (useCloud()) {
+      return [
+        ...seeded,
+        ...cloudScripts.map((s) => ({
+          id: s.path,
+          name: s.name,
+          title: s.name,
+          language: extLanguage(s.name),
+          description: "Stored in Supabase",
+          preview: s.preview || "Open preview to load full script…",
+          content: s.content || "",
+          path: s.path,
+          cloud: true,
+        })),
+      ];
+    }
     return [...seeded, ...loadStore(SCRIPT_KEY)];
   }
 
@@ -174,6 +260,9 @@
 
     if (!scripts.length) {
       empty.hidden = false;
+      empty.textContent = useCloud()
+        ? "No scripts in Supabase yet — upload your first file above."
+        : "No scripts yet — upload your first file above.";
       return;
     }
     empty.hidden = true;
@@ -200,7 +289,7 @@
             className: "item-delete",
             type: "button",
             "aria-label": "Remove script",
-            onClick: () => removeScript(script.id),
+            onClick: () => removeScript(script),
           }, "×")
         );
       }
@@ -225,8 +314,20 @@
     observeReveals();
   }
 
-  function removeScript(id) {
-    const next = loadStore(SCRIPT_KEY).filter((s) => s.id !== id);
+  async function removeScript(script) {
+    if (useCloud() && script.path) {
+      setUploadStatus("script", "Removing…");
+      const { error } = await PortfolioStorage.removeFile("scripts", script.path);
+      if (error) {
+        setUploadStatus("script", error.message || "Could not remove script.", true);
+        return;
+      }
+      await refreshCloudScripts();
+      setUploadStatus("script", "");
+      return;
+    }
+
+    const next = loadStore(SCRIPT_KEY).filter((s) => s.id !== script.id);
     saveStore(SCRIPT_KEY, next);
     renderScripts();
   }
@@ -234,6 +335,20 @@
   async function handleScriptFiles(files) {
     const list = Array.from(files);
     if (!list.length) return;
+
+    if (useCloud()) {
+      setUploadStatus("script", `Uploading ${list.length} script${list.length > 1 ? "s" : ""} to Supabase…`);
+      for (const file of list) {
+        const { error } = await PortfolioStorage.uploadFile("scripts", file);
+        if (error) {
+          setUploadStatus("script", error.message || "Upload failed.", true);
+          return;
+        }
+      }
+      await refreshCloudScripts();
+      setUploadStatus("script", "Uploaded to Supabase Storage.");
+      return;
+    }
 
     const stored = loadStore(SCRIPT_KEY);
     for (const file of list) {
@@ -251,9 +366,32 @@
     }
     saveStore(SCRIPT_KEY, stored);
     renderScripts();
+    setUploadStatus("script", "Saved in this browser (add Supabase keys for cloud storage).");
   }
 
-  function openScriptModal(script) {
+  async function refreshCloudScripts() {
+    const { data, error } = await PortfolioStorage.listFiles("scripts");
+    if (error) {
+      console.error(error);
+      setUploadStatus("script", error.message || "Could not load scripts from Supabase.", true);
+      cloudScripts = [];
+      renderScripts();
+      return;
+    }
+
+    cloudScripts = [];
+    for (const file of data) {
+      const { data: text } = await PortfolioStorage.downloadText("scripts", file.path);
+      cloudScripts.push({
+        ...file,
+        content: text || "",
+        preview: (text || "").slice(0, 800),
+      });
+    }
+    renderScripts();
+  }
+
+  async function openScriptModal(script) {
     const modal = document.getElementById("detail-modal");
     const body = document.getElementById("modal-body");
     body.innerHTML = "";
@@ -262,10 +400,19 @@
       el("p", { text: `${script.language || "Script"}${script.description ? " · " + script.description : ""}` }),
       el("pre", {
         className: "script-preview script-preview-full",
-        text: script.content || script.preview || "// Empty",
+        text: "Loading…",
       })
     );
     modal.showModal();
+
+    let content = script.content || script.preview || "";
+    if (useCloud() && script.path && !script.content) {
+      const { data, error } = await PortfolioStorage.downloadText("scripts", script.path);
+      if (!error) content = data;
+    }
+
+    const pre = body.querySelector("pre");
+    if (pre) pre.textContent = content || "// Empty";
   }
 
   /* ── File readers ── */
@@ -325,6 +472,16 @@
     zone.addEventListener("drop", (e) => {
       if (e.dataTransfer?.files?.length) handler(e.dataTransfer.files);
     });
+  }
+
+  function updateStorageHints() {
+    const photoHint = document.getElementById("photo-storage-hint");
+    const scriptHint = document.getElementById("script-storage-hint");
+    const msg = useCloud()
+      ? "Powered by Supabase Storage — files sync across devices and GitHub Pages."
+      : "Add your Supabase URL + anon key in js/supabase-config.js to enable cloud storage.";
+    if (photoHint) photoHint.textContent = msg;
+    if (scriptHint) scriptHint.textContent = msg;
   }
 
   /* ── About & Contact ── */
@@ -408,17 +565,24 @@
   }
 
   /* ── Init ── */
-  function init() {
+  async function init() {
     document.getElementById("year").textContent = new Date().getFullYear();
     renderGoals();
-    renderPhotos();
-    renderScripts();
     renderAbout();
     renderContact();
     setupUploadZone("photo-upload-zone", "photo-input", handlePhotoFiles);
     setupUploadZone("script-upload-zone", "script-input", handleScriptFiles);
     setupModals();
     setupNav();
+    updateStorageHints();
+
+    if (useCloud()) {
+      await Promise.all([refreshCloudPhotos(), refreshCloudScripts()]);
+    } else {
+      renderPhotos();
+      renderScripts();
+    }
+
     observeReveals();
   }
 

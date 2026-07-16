@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=7" />
+  <link rel="stylesheet" href="css/styles.css?v=10" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true">
@@ -160,8 +160,9 @@
           <h2>Photos</h2>
           <p class="section-sub">
             Upload and showcase pictures from projects, events, and creative work.
-            Images stay in this browser until you add them to the site permanently.
+            Files sync through Supabase Storage when configured.
           </p>
+          <p class="storage-hint" id="photo-storage-hint"></p>
         </div>
 
         <div class="upload-zone reveal" id="photo-upload-zone" tabindex="0" role="button" aria-label="Upload photos">
@@ -172,6 +173,7 @@
             <p class="upload-hint">JPG, PNG, WebP — multiple files supported</p>
           </div>
         </div>
+        <p class="upload-status" id="photo-upload-status" hidden></p>
 
         <div class="photo-grid" id="photo-grid"></div>
         <p class="empty-state" id="photo-empty">No photos yet — upload your first image above.</p>
@@ -186,8 +188,9 @@
           <h2>Scripts</h2>
           <p class="section-sub">
             Upload scripts and code files to share with grant reviewers and collaborators.
-            Preview them right here in the browser.
+            Preview them here — stored in Supabase when configured.
           </p>
+          <p class="storage-hint" id="script-storage-hint"></p>
         </div>
 
         <div class="upload-zone reveal" id="script-upload-zone" tabindex="0" role="button" aria-label="Upload scripts">
@@ -198,6 +201,7 @@
             <p class="upload-hint">.py, .sh, .js, .ts, and more</p>
           </div>
         </div>
+        <p class="upload-status" id="script-upload-status" hidden></p>
 
         <div class="script-list" id="script-list"></div>
         <p class="empty-state" id="script-empty">No scripts yet — upload your first file above.</p>
@@ -243,7 +247,10 @@
     <p id="lightbox-caption" class="lightbox-caption"></p>
   </dialog>
 
-  <script src="js/content.js?v=9"></script>
-  <script src="js/main.js?v=9"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js?v=10"></script>
+  <script src="js/storage.js?v=10"></script>
+  <script src="js/content.js?v=10"></script>
+  <script src="js/main.js?v=10"></script>
 </body>
 </html>
