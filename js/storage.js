@@ -99,11 +99,20 @@
     return { data: text, error: null };
   }
 
+  async function downloadBlobUrl(bucketName, path) {
+    const sb = getClient();
+    if (!sb) return { data: "", error: new Error("Supabase not configured") };
+    const { data, error } = await sb.storage.from(bucket(bucketName)).download(path);
+    if (error) return { data: "", error };
+    return { data: URL.createObjectURL(data), error: null };
+  }
+
   global.PortfolioStorage = {
     isConfigured,
     listFiles,
     uploadFile,
     removeFile,
     downloadText,
+    downloadBlobUrl,
   };
 })(window);

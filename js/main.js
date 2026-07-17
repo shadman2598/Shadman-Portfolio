@@ -129,7 +129,45 @@
     return [...seeded, ...loadStore(PHOTO_KEY)];
   }
 
-  function renderPhotos() {
+  async function resolvePdfUrl(item, bucketName) {
+    if (item.src?.startsWith("data:") || item.src?.startsWith("blob:")) return item.src;
+    if (item.path && useCloud()) {
+      const { data, error } = await PortfolioStorage.downloadBlobUrl(bucketName, item.path);
+      if (!error && data) return data;
+    }
+    return item.src;
+  }
+
+  async function expandPdfAsImages(item, bucketName = "photos") {
+    if (!(item.isPdf || isPdfPath(item.name) || item.src?.startsWith("data:application/pdf"))) {
+      return [item];
+    }
+    try {
+      const pdfUrl = await resolvePdfUrl(item, bucketName);
+      const pages = await PortfolioPdf.renderAllPages(pdfUrl, 1000);
+      if (!pages.length) return [item];
+      return pages.map((page) => ({
+        id: `${item.id || item.path || item.name}-page-${page.page}`,
+        name: item.name,
+        title: pages.length > 1
+          ? `${item.title || item.name} · page ${page.page}`
+          : (item.title || item.name.replace(/\.[^.]+$/, "")),
+        src: page.src,
+        path: item.path,
+        pdfSource: pdfUrl,
+        cloud: item.cloud,
+        permanent: item.permanent,
+        isPdfPage: true,
+        pageNumber: page.page,
+        pageCount: page.total,
+      }));
+    } catch (err) {
+      console.error("PDF render failed", err);
+      return [{ ...item, isPdf: true, renderFailed: true }];
+    }
+  }
+
+  async function renderPhotos() {
     const grid = document.getElementById("photo-grid");
     const empty = document.getElementById("photo-empty");
     const photos = getPhotos();
@@ -144,62 +182,100 @@
     }
     empty.hidden = true;
 
+    // Show loading cards for PDFs while pages render
     photos.forEach((photo, i) => {
       const isPdf = photo.isPdf || isPdfPath(photo.name) || photo.src?.includes("application/pdf");
-      const card = el("figure", {
-        className: `photo-card reveal${isPdf ? " is-pdf" : ""}`,
+      if (!isPdf) {
+        grid.append(buildPhotoCard(photo, i));
+        return;
+      }
+      const placeholder = el("figure", {
+        className: "photo-card reveal",
         style: `--delay: ${i * 0.04}s`,
-      });
-
-      if (isPdf) {
-        const tile = el("div", {
-          className: "photo-pdf-tile",
-          onClick: () => window.open(photo.src, "_blank", "noopener"),
-        }, [
+        "data-pdf-id": photo.id || photo.path || photo.name,
+      }, [
+        el("div", { className: "photo-pdf-tile" }, [
           el("strong", { text: "PDF" }),
-          el("span", { text: "Open document" }),
-        ]);
-        card.append(tile);
-      } else {
-        const img = el("img", {
-          src: photo.src,
-          alt: photo.title || "Uploaded photo",
-          loading: "lazy",
-        });
-        img.addEventListener("click", () => openLightbox(photo.src, photo.title || photo.name || "Photo"));
-        card.append(img);
-      }
-
-      const caption = el("figcaption", { className: "photo-caption" }, [
-        el("span", { text: photo.title || photo.name || "Untitled" }),
+          el("span", { text: "Loading preview…" }),
+        ]),
+        el("figcaption", { className: "photo-caption" }, [
+          el("span", { text: photo.title || photo.name || "Untitled" }),
+        ]),
       ]);
-
-      if (!photo.permanent) {
-        caption.append(
-          el("button", {
-            className: "item-delete",
-            type: "button",
-            "aria-label": "Remove file",
-            title: "Remove",
-            onClick: (e) => {
-              e.stopPropagation();
-              removePhoto(photo);
-            },
-          }, "×")
-        );
-      }
-
-      card.append(caption);
-      grid.append(card);
+      grid.append(placeholder);
     });
+    observeReveals();
 
+    const expanded = [];
+    for (const photo of photos) {
+      expanded.push(...(await expandPdfAsImages(photo)));
+    }
+
+    grid.innerHTML = "";
+    expanded.forEach((photo, i) => grid.append(buildPhotoCard(photo, i)));
     observeReveals();
   }
 
+  function buildPhotoCard(photo, index) {
+    const failedPdf = photo.renderFailed;
+    const card = el("figure", {
+      className: `photo-card reveal${failedPdf ? " is-pdf" : ""}`,
+      style: `--delay: ${Math.min(index, 12) * 0.04}s`,
+    });
+
+    if (failedPdf) {
+      card.append(
+        el("div", {
+          className: "photo-pdf-tile",
+          onClick: () => openPdfViewer(photo.src || photo.pdfSource, photo.title || photo.name),
+        }, [
+          el("strong", { text: "PDF" }),
+          el("span", { text: "Tap to view" }),
+        ])
+      );
+    } else {
+      const img = el("img", {
+        src: photo.src,
+        alt: photo.title || "Uploaded photo",
+        loading: "lazy",
+      });
+      img.addEventListener("click", () => {
+        if (photo.pdfSource) openPdfViewer(photo.pdfSource, photo.title || photo.name);
+        else openLightbox(photo.src, photo.title || photo.name || "Photo");
+      });
+      card.append(img);
+    }
+
+    const caption = el("figcaption", { className: "photo-caption" }, [
+      el("span", { text: photo.title || photo.name || "Untitled" }),
+    ]);
+
+    if (!photo.permanent) {
+      caption.append(
+        el("button", {
+          className: "item-delete",
+          type: "button",
+          "aria-label": "Remove file",
+          title: "Remove",
+          onClick: (e) => {
+            e.stopPropagation();
+            removePhoto(photo);
+          },
+        }, "×")
+      );
+    }
+
+    card.append(caption);
+    return card;
+  }
+
   async function removePhoto(photo) {
-    if (useCloud() && photo.path) {
+    const path = photo.path || photo.id;
+    if (useCloud() && (photo.path || photo.isPdfPage)) {
+      const removePath = photo.path;
+      if (!removePath) return;
       setUploadStatus("photo", "Removing…");
-      const { error } = await PortfolioStorage.removeFile("photos", photo.path);
+      const { error } = await PortfolioStorage.removeFile("photos", removePath);
       if (error) {
         setUploadStatus("photo", error.message || "Could not remove photo.", true);
         return;
@@ -209,7 +285,11 @@
       return;
     }
 
-    const next = loadStore(PHOTO_KEY).filter((p) => p.id !== photo.id);
+    // Local: remove whole PDF if deleting one of its rendered pages
+    const next = loadStore(PHOTO_KEY).filter((p) => {
+      if (photo.pdfSource) return p.src !== photo.pdfSource && p.id !== path;
+      return p.id !== photo.id;
+    });
     saveStore(PHOTO_KEY, next);
     renderPhotos();
   }
@@ -274,12 +354,15 @@
           id: s.path,
           name: s.name,
           title: s.name,
-          language: extLanguage(s.name),
-          description: "Stored in Supabase",
-          preview: s.preview || "Open preview to load full script…",
+          language: s.isPdf ? "PDF" : extLanguage(s.name),
+          description: s.isPdf ? "PDF script document" : "Stored in Supabase",
+          preview: s.preview || "",
           content: s.content || "",
+          src: s.src,
           path: s.path,
           cloud: true,
+          isPdf: Boolean(s.isPdf || isPdfPath(s.name)),
+          pageImages: s.pageImages || [],
         })),
       ];
     }
@@ -302,8 +385,9 @@
     empty.hidden = true;
 
     scripts.forEach((script, i) => {
+      const isPdf = script.isPdf || isPdfPath(script.name);
       const card = el("article", {
-        className: "script-card reveal",
+        className: `script-card reveal${isPdf ? " script-card-pdf" : ""}`,
         style: `--delay: ${i * 0.05}s`,
       });
 
@@ -312,7 +396,7 @@
           el("h3", { text: script.title || script.name }),
           el("span", {
             className: "script-lang",
-            text: script.language || extLanguage(script.name || ""),
+            text: isPdf ? "PDF" : (script.language || extLanguage(script.name || "")),
           }),
         ]),
       ]);
@@ -328,21 +412,72 @@
         );
       }
 
-      const preview = el("pre", {
-        className: "script-preview",
-        text: (script.preview || script.content || "").slice(0, 400),
-      });
+      card.append(header);
 
-      const actions = el("div", { className: "showcase-actions" }, [
-        el("button", {
-          className: "showcase-btn primary",
-          type: "button",
-          onClick: () => openScriptModal(script),
-        }, "Preview"),
-      ]);
+      if (isPdf) {
+        const viewer = el("div", { className: "script-pdf-pages" });
+        viewer.append(el("p", { className: "pdf-loading", text: "Loading PDF pages…" }));
+        card.append(viewer);
 
-      card.append(header, preview, actions);
-      list.append(card);
+        const actions = el("div", { className: "showcase-actions" }, [
+          el("button", {
+            className: "showcase-btn primary",
+            type: "button",
+            onClick: () => openPdfViewer(script.src, script.title || script.name),
+          }, "View full PDF"),
+        ]);
+        card.append(actions);
+        list.append(card);
+
+        // Fill pages asynchronously
+        (async () => {
+          try {
+            const pdfUrl = await resolvePdfUrl(script, "scripts");
+            script.src = pdfUrl;
+            const pages = await PortfolioPdf.renderAllPages(pdfUrl, 720);
+            viewer.innerHTML = "";
+            if (!pages.length) {
+              viewer.append(el("p", { text: "Could not preview this PDF." }));
+              return;
+            }
+            pages.forEach((page) => {
+              const img = el("img", {
+                className: "script-pdf-page",
+                src: page.src,
+                alt: `${script.title || script.name} page ${page.page}`,
+                loading: "lazy",
+              });
+              img.addEventListener("click", () => openPdfViewer(pdfUrl, script.title || script.name));
+              viewer.append(img);
+            });
+          } catch (err) {
+            console.error(err);
+            viewer.innerHTML = "";
+            viewer.append(
+              el("button", {
+                className: "showcase-btn primary",
+                type: "button",
+                onClick: () => openPdfViewer(script.src, script.title || script.name),
+              }, "Open PDF document")
+            );
+          }
+        })();
+      } else {
+        card.append(
+          el("pre", {
+            className: "script-preview",
+            text: (script.preview || script.content || "").slice(0, 400),
+          }),
+          el("div", { className: "showcase-actions" }, [
+            el("button", {
+              className: "showcase-btn primary",
+              type: "button",
+              onClick: () => openScriptModal(script),
+            }, "Preview"),
+          ])
+        );
+        list.append(card);
+      }
     });
 
     observeReveals();
@@ -431,9 +566,19 @@
 
     cloudScripts = [];
     for (const file of data) {
+      if (isPdfPath(file.name)) {
+        cloudScripts.push({
+          ...file,
+          isPdf: true,
+          content: "",
+          preview: "",
+        });
+        continue;
+      }
       const { data: text } = await PortfolioStorage.downloadText("scripts", file.path);
       cloudScripts.push({
         ...file,
+        isPdf: false,
         content: text || "",
         preview: (text || "").slice(0, 800),
       });
@@ -442,6 +587,11 @@
   }
 
   async function openScriptModal(script) {
+    if (script.isPdf || isPdfPath(script.name)) {
+      openPdfViewer(script.src, script.title || script.name);
+      return;
+    }
+
     const modal = document.getElementById("detail-modal");
     const body = document.getElementById("modal-body");
     body.innerHTML = "";
@@ -563,12 +713,74 @@
   }
 
   /* ── Lightbox & modals ── */
+  /* ── Lightbox & PDF viewer ── */
   function openLightbox(src, caption) {
     const modal = document.getElementById("lightbox-modal");
-    document.getElementById("lightbox-img").src = src;
-    document.getElementById("lightbox-img").alt = caption;
+    const img = document.getElementById("lightbox-img");
+    const pdfFrame = document.getElementById("lightbox-pdf");
+    const pages = document.getElementById("lightbox-pdf-pages");
+    img.hidden = false;
+    img.src = src;
+    img.alt = caption;
+    if (pdfFrame) {
+      pdfFrame.hidden = true;
+      pdfFrame.removeAttribute("src");
+    }
+    if (pages) {
+      pages.hidden = true;
+      pages.innerHTML = "";
+    }
     document.getElementById("lightbox-caption").textContent = caption;
     modal.showModal();
+  }
+
+  async function openPdfViewer(src, caption) {
+    const modal = document.getElementById("lightbox-modal");
+    const img = document.getElementById("lightbox-img");
+    const pdfFrame = document.getElementById("lightbox-pdf");
+    const pages = document.getElementById("lightbox-pdf-pages");
+    img.hidden = true;
+    img.removeAttribute("src");
+    document.getElementById("lightbox-caption").textContent = caption || "PDF";
+
+    if (pages) {
+      pages.hidden = false;
+      pages.innerHTML = "<p class='pdf-loading'>Loading PDF pages…</p>";
+    }
+    if (pdfFrame) {
+      pdfFrame.hidden = true;
+      pdfFrame.removeAttribute("src");
+    }
+    modal.showModal();
+
+    try {
+      const rendered = await PortfolioPdf.renderAllPages(src, 1100);
+      if (!pages) return;
+      pages.innerHTML = "";
+      if (!rendered.length) {
+        pages.innerHTML = "<p>Could not display this PDF.</p>";
+        return;
+      }
+      rendered.forEach((page) => {
+        pages.append(
+          el("img", {
+            className: "lightbox-pdf-page",
+            src: page.src,
+            alt: `Page ${page.page}`,
+          })
+        );
+      });
+    } catch (err) {
+      console.error(err);
+      if (pages) {
+        pages.innerHTML = "";
+        pages.hidden = true;
+      }
+      if (pdfFrame) {
+        pdfFrame.hidden = false;
+        pdfFrame.src = src;
+      }
+    }
   }
 
   function setupModals() {

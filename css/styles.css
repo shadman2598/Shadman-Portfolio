@@ -1357,6 +1357,63 @@ ul { list-style: none; }
   color: var(--text-muted);
 }
 
+.script-pdf-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 8px 0 16px;
+  max-height: 520px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.script-pdf-page,
+.lightbox-pdf-page {
+  width: 100%;
+  border-radius: 10px;
+  background: #fff;
+  cursor: zoom-in;
+}
+
+.script-card-pdf {
+  grid-column: 1 / -1;
+}
+
+.pdf-loading {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 24px 8px;
+}
+
+.lightbox-pdf-pages {
+  width: min(920px, 92vw);
+  max-height: 80vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px;
+}
+
+.lightbox-pdf {
+  width: min(920px, 92vw);
+  height: 80vh;
+  border: 0;
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.lightbox img {
+  max-width: min(90vw, 900px);
+  max-height: 80vh;
+  border-radius: var(--radius);
+  object-fit: contain;
+}
+
 /* ============================================
    Sakura Studio — vibrant Japanese-inspired skin
    ============================================ */
