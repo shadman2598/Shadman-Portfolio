@@ -776,6 +776,45 @@ ul { list-style: none; }
   border: 1px solid rgba(255, 199, 223, 0.18);
 }
 
+.about-portrait {
+  position: relative;
+  z-index: 2;
+  margin-top: 40px;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 199, 223, 0.18);
+  background: #1a1026;
+  box-shadow: 0 20px 60px rgba(8, 4, 20, 0.4);
+}
+
+.about-portrait img {
+  width: 100%;
+  height: auto;
+  max-height: min(68vh, 640px);
+  object-fit: cover;
+  object-position: center 28%;
+  display: block;
+}
+
+.about-portrait figcaption {
+  padding: 14px 20px 16px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  background: #241633;
+  border-top: 1px solid rgba(255, 199, 223, 0.12);
+}
+
+@media (max-width: 720px) {
+  .about-portrait {
+    margin-top: 28px;
+    border-radius: 20px;
+  }
+
+  .about-portrait img {
+    max-height: 52vh;
+  }
+}
+
 .about-panel h3 {
   font-size: 0.78rem;
   text-transform: uppercase;
