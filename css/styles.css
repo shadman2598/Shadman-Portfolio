@@ -1406,12 +1406,21 @@ body.modal-open {
   border: 1px solid rgba(255, 199, 223, 0.14);
 }
 
-.script-pdf-page,
+.script-pdf-page {
+  width: 100%;
+  border-radius: 10px;
+  background: #fff;
+  cursor: default;
+  display: block;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
 .lightbox-pdf-page {
   width: 100%;
   border-radius: 10px;
   background: #fff;
-  cursor: zoom-in;
+  cursor: default;
   display: block;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }

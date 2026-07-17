@@ -418,18 +418,9 @@
         const viewer = el("div", { className: "script-pdf-pages" });
         viewer.append(el("p", { className: "pdf-loading", text: "Loading PDF pages…" }));
         card.append(viewer);
-
-        const actions = el("div", { className: "showcase-actions" }, [
-          el("button", {
-            className: "showcase-btn primary",
-            type: "button",
-            onClick: () => openPdfViewer(script.src, script.title || script.name),
-          }, "View full PDF"),
-        ]);
-        card.append(actions);
         list.append(card);
 
-        // Fill pages asynchronously
+        // Render pages inline only — no zoom/lightbox overlay
         (async () => {
           try {
             const pdfUrl = await resolvePdfUrl(script, "scripts");
@@ -441,25 +432,19 @@
               return;
             }
             pages.forEach((page) => {
-              const img = el("img", {
-                className: "script-pdf-page",
-                src: page.src,
-                alt: `${script.title || script.name} page ${page.page}`,
-                loading: "lazy",
-              });
-              img.addEventListener("click", () => openPdfViewer(pdfUrl, script.title || script.name));
-              viewer.append(img);
+              viewer.append(
+                el("img", {
+                  className: "script-pdf-page",
+                  src: page.src,
+                  alt: `${script.title || script.name} page ${page.page}`,
+                  loading: "lazy",
+                })
+              );
             });
           } catch (err) {
             console.error(err);
             viewer.innerHTML = "";
-            viewer.append(
-              el("button", {
-                className: "showcase-btn primary",
-                type: "button",
-                onClick: () => openPdfViewer(script.src, script.title || script.name),
-              }, "Open PDF document")
-            );
+            viewer.append(el("p", { text: "Could not load this PDF preview." }));
           }
         })();
       } else {
@@ -588,7 +573,7 @@
 
   async function openScriptModal(script) {
     if (script.isPdf || isPdfPath(script.name)) {
-      openPdfViewer(script.src, script.title || script.name);
+      // PDF scripts stay inline in the Scripts section — no overlay viewer
       return;
     }
 
