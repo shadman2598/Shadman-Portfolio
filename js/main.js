@@ -82,7 +82,7 @@
     charity.goals.forEach((goal, i) => {
       grid.append(
         el("article", {
-          className: "goal-card reveal",
+          className: "goal-card",
           style: `--delay: ${i * 0.06}s`,
         }, [
           el("span", { className: "goal-icon", text: goal.icon }),
@@ -190,7 +190,7 @@
         return;
       }
       const placeholder = el("figure", {
-        className: "photo-card reveal",
+        className: "photo-card",
         style: `--delay: ${i * 0.04}s`,
         "data-pdf-id": photo.id || photo.path || photo.name,
       }, [
@@ -219,7 +219,7 @@
   function buildPhotoCard(photo, index) {
     const failedPdf = photo.renderFailed;
     const card = el("figure", {
-      className: `photo-card reveal${failedPdf ? " is-pdf" : ""}`,
+      className: `photo-card${failedPdf ? " is-pdf" : ""}`,
       style: `--delay: ${Math.min(index, 12) * 0.04}s`,
     });
 
@@ -387,7 +387,7 @@
     scripts.forEach((script, i) => {
       const isPdf = script.isPdf || isPdfPath(script.name);
       const card = el("article", {
-        className: `script-card reveal${isPdf ? " script-card-pdf" : ""}`,
+        className: `script-card${isPdf ? " script-card-pdf" : ""}`,
         style: `--delay: ${i * 0.05}s`,
       });
 
@@ -603,7 +603,7 @@
         text: "Loading…",
       })
     );
-    modal.showModal();
+    showCleanModal(modal);
 
     let content = script.content || script.preview || "";
     if (useCloud() && script.path && !script.content) {
@@ -714,6 +714,18 @@
 
   /* ── Lightbox & modals ── */
   /* ── Lightbox & PDF viewer ── */
+  function showCleanModal(modal) {
+    document.documentElement.classList.add("modal-open");
+    document.body.classList.add("modal-open");
+    if (!modal.open) modal.showModal();
+  }
+
+  function closeCleanModal(modal) {
+    if (modal.open) modal.close();
+    document.documentElement.classList.remove("modal-open");
+    document.body.classList.remove("modal-open");
+  }
+
   function openLightbox(src, caption) {
     const modal = document.getElementById("lightbox-modal");
     const img = document.getElementById("lightbox-img");
@@ -731,7 +743,7 @@
       pages.innerHTML = "";
     }
     document.getElementById("lightbox-caption").textContent = caption;
-    modal.showModal();
+    showCleanModal(modal);
   }
 
   async function openPdfViewer(src, caption) {
@@ -751,7 +763,7 @@
       pdfFrame.hidden = true;
       pdfFrame.removeAttribute("src");
     }
-    modal.showModal();
+    showCleanModal(modal);
 
     try {
       const rendered = await PortfolioPdf.renderAllPages(src, 1100);
@@ -785,9 +797,15 @@
 
   function setupModals() {
     document.querySelectorAll(".modal").forEach((modal) => {
-      modal.querySelector(".modal-close")?.addEventListener("click", () => modal.close());
+      modal.querySelector(".modal-close")?.addEventListener("click", () => closeCleanModal(modal));
       modal.addEventListener("click", (e) => {
-        if (e.target === modal) modal.close();
+        if (e.target === modal && !modal.classList.contains("lightbox")) {
+          closeCleanModal(modal);
+        }
+      });
+      modal.addEventListener("close", () => {
+        document.documentElement.classList.remove("modal-open");
+        document.body.classList.remove("modal-open");
       });
     });
   }

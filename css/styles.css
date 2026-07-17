@@ -113,8 +113,8 @@ ul { list-style: none; }
   position: absolute;
   border-radius: 50%;
   filter: blur(100px);
-  opacity: 0.45;
-  animation: float 20s ease-in-out infinite;
+  opacity: 0.22;
+  animation: none;
 }
 
 .orb-1 {
@@ -772,8 +772,8 @@ ul { list-style: none; }
 .about-panel {
   padding: 32px;
   border-radius: var(--radius-lg);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: #241633;
+  border: 1px solid rgba(255, 199, 223, 0.18);
 }
 
 .about-panel h3 {
@@ -881,6 +881,21 @@ ul { list-style: none; }
 }
 
 /* Modal */
+.modal:not([open]) {
+  display: none !important;
+}
+
+.modal[open] {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+}
+
+html.modal-open,
+body.modal-open {
+  overflow: hidden;
+}
+
 .modal {
   border: none;
   padding: 0;
@@ -940,10 +955,21 @@ ul { list-style: none; }
 }
 
 .lightbox {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  background: #0c0912;
+}
+
+.lightbox[open] {
+  display: flex;
+}
+
+.lightbox::backdrop {
+  background: #0c0912;
+  backdrop-filter: none;
 }
 
 .lightbox img {
@@ -961,9 +987,10 @@ ul { list-style: none; }
 }
 
 .lightbox-caption {
-  margin-top: 16px;
+  flex: 0 0 auto;
+  margin: 12px 24px 18px;
   text-align: center;
-  color: var(--text-muted);
+  color: #e8dce9;
   font-size: 0.9rem;
 }
 
@@ -1092,14 +1119,17 @@ ul { list-style: none; }
 .goal-card {
   padding: 28px;
   border-radius: var(--radius);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  transition: transform 0.3s var(--ease), border-color 0.3s;
+  background: #241633;
+  border: 1px solid rgba(255, 199, 223, 0.18);
+  transition: none;
+  transform: none !important;
+  opacity: 1 !important;
+  box-shadow: 0 12px 36px rgba(8, 4, 20, 0.28);
 }
 
 .goal-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-strong);
+  transform: none;
+  border-color: rgba(255, 199, 223, 0.3);
 }
 
 .goal-icon {
@@ -1211,15 +1241,18 @@ ul { list-style: none; }
   position: relative;
   border-radius: var(--radius);
   overflow: hidden;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  border: 1px solid rgba(255, 199, 223, 0.18);
+  background: #241633;
   cursor: zoom-in;
-  transition: transform 0.3s var(--ease), border-color 0.3s;
+  transition: none;
+  transform: none !important;
+  opacity: 1 !important;
+  box-shadow: 0 12px 36px rgba(8, 4, 20, 0.3);
 }
 
 .photo-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-strong);
+  transform: none;
+  border-color: rgba(255, 199, 223, 0.3);
 }
 
 .photo-card img {
@@ -1264,14 +1297,17 @@ ul { list-style: none; }
 .script-card {
   padding: 24px;
   border-radius: var(--radius);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  transition: border-color 0.3s, transform 0.3s;
+  background: #241633;
+  border: 1px solid rgba(255, 199, 223, 0.18);
+  box-shadow: 0 12px 40px rgba(8, 4, 20, 0.35);
+  transition: none;
+  transform: none !important;
+  opacity: 1 !important;
 }
 
 .script-card:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-3px);
+  border-color: rgba(255, 199, 223, 0.28);
+  transform: none;
 }
 
 .script-card-head {
@@ -1360,14 +1396,14 @@ ul { list-style: none; }
 .script-pdf-pages {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   margin: 8px 0 16px;
-  max-height: 520px;
+  max-height: 640px;
   overflow: auto;
-  padding: 8px;
+  padding: 14px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
+  background: #1a1026;
+  border: 1px solid rgba(255, 199, 223, 0.14);
 }
 
 .script-pdf-page,
@@ -1376,10 +1412,15 @@ ul { list-style: none; }
   border-radius: 10px;
   background: #fff;
   cursor: zoom-in;
+  display: block;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .script-card-pdf {
   grid-column: 1 / -1;
+  width: min(100%, 860px);
+  margin-inline: auto;
+  background: #241633;
 }
 
 .pdf-loading {
@@ -1391,17 +1432,20 @@ ul { list-style: none; }
 
 .lightbox-pdf-pages {
   width: min(920px, 92vw);
-  max-height: 80vh;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 8px;
+  padding: 72px 12px 16px;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
 }
 
 .lightbox-pdf {
   width: min(920px, 92vw);
-  height: 80vh;
+  height: calc(100vh - 110px);
   border: 0;
   border-radius: var(--radius);
   background: #fff;
@@ -1478,11 +1522,9 @@ body {
 .goal-card,
 .script-card,
 .contact-card {
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.07), transparent 50%),
-    rgba(43, 27, 63, 0.72);
-  border-color: rgba(255, 199, 223, 0.15);
-  box-shadow: 0 18px 60px rgba(10, 5, 24, 0.25);
+  background: #241633;
+  border-color: rgba(255, 199, 223, 0.18);
+  box-shadow: 0 16px 48px rgba(10, 5, 24, 0.32);
 }
 
 .hero-card {
@@ -1491,7 +1533,7 @@ body {
 }
 
 .hero-card:hover {
-  transform: translateY(-5px);
+  transform: none;
 }
 
 .hero-card-glow {
@@ -1556,8 +1598,8 @@ body {
 }
 
 .goal-card:hover {
-  transform: translateY(-7px);
-  border-color: rgba(255, 130, 177, 0.38);
+  transform: none;
+  border-color: rgba(255, 130, 177, 0.3);
 }
 
 .goal-icon {
@@ -1605,8 +1647,8 @@ body {
   position: absolute;
   width: 390px;
   height: 300px;
-  opacity: 0.38;
-  filter: drop-shadow(0 8px 20px rgba(255, 86, 151, 0.18));
+  opacity: 0.22;
+  filter: drop-shadow(0 8px 20px rgba(255, 86, 151, 0.12));
   pointer-events: none;
   z-index: 0;
 }
@@ -1669,16 +1711,12 @@ body {
   background: linear-gradient(90deg, #ff74aa, #ffc4dc);
 }
 
+.falling-petals {
+  display: none;
+}
+
 .falling-petals i {
-  position: absolute;
-  top: -30px;
-  left: var(--left);
-  width: 11px;
-  height: 17px;
-  border-radius: 80% 12% 80% 12%;
-  background: linear-gradient(145deg, #ff83b2, #ffd0e2);
-  opacity: 0;
-  animation: petal-fall var(--duration) linear var(--delay) infinite;
+  display: none;
 }
 
 @keyframes petal-fall {
@@ -1756,7 +1794,7 @@ body {
 }
 
 .zarish-feature-link:hover {
-  transform: translateY(-6px) rotate(-0.25deg);
+  transform: none;
   border-color: rgba(255, 129, 178, 0.5);
   box-shadow: 0 28px 85px rgba(255, 86, 151, 0.16);
 }
