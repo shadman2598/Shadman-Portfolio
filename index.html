@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=10" />
+  <link rel="stylesheet" href="css/styles.css?v=12" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true">
@@ -157,20 +157,20 @@
       <div class="container">
         <div class="section-head reveal">
           <p class="eyebrow">Gallery</p>
-          <h2>Photos</h2>
+          <h2>Photos &amp; PDFs</h2>
           <p class="section-sub">
-            Upload and showcase pictures from projects, events, and creative work.
+            Upload pictures and PDF documents from projects, events, and creative work.
             Files sync through Supabase Storage when configured.
           </p>
           <p class="storage-hint" id="photo-storage-hint"></p>
         </div>
 
-        <div class="upload-zone reveal" id="photo-upload-zone" tabindex="0" role="button" aria-label="Upload photos">
-          <input type="file" id="photo-input" accept="image/*" multiple hidden />
+        <div class="upload-zone reveal" id="photo-upload-zone" tabindex="0" role="button" aria-label="Upload photos and PDFs">
+          <input type="file" id="photo-input" accept="image/*,.pdf,application/pdf" multiple hidden />
           <div class="upload-zone-inner">
             <span class="upload-icon">📷</span>
-            <p><strong>Drop photos here</strong> or click to browse</p>
-            <p class="upload-hint">JPG, PNG, WebP — multiple files supported</p>
+            <p><strong>Drop photos or PDFs here</strong> or click to browse</p>
+            <p class="upload-hint">JPG, PNG, WebP, PDF — multiple files supported</p>
           </div>
         </div>
         <p class="upload-status" id="photo-upload-status" hidden></p>
@@ -194,11 +194,11 @@
         </div>
 
         <div class="upload-zone reveal" id="script-upload-zone" tabindex="0" role="button" aria-label="Upload scripts">
-          <input type="file" id="script-input" accept=".js,.ts,.py,.sh,.bash,.rb,.go,.rs,.java,.c,.cpp,.h,.css,.html,.json,.md,.sql,.yml,.yaml,.txt" multiple hidden />
+          <input type="file" id="script-input" accept=".js,.ts,.py,.sh,.bash,.rb,.go,.rs,.java,.c,.cpp,.h,.css,.html,.json,.md,.sql,.yml,.yaml,.txt,.pdf,application/pdf" multiple hidden />
           <div class="upload-zone-inner">
             <span class="upload-icon">⌨</span>
             <p><strong>Drop scripts here</strong> or click to browse</p>
-            <p class="upload-hint">.py, .sh, .js, .ts, and more</p>
+            <p class="upload-hint">.py, .sh, .js, .ts, .pdf, and more</p>
           </div>
         </div>
         <p class="upload-status" id="script-upload-status" hidden></p>
@@ -248,9 +248,9 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js?v=10"></script>
-  <script src="js/storage.js?v=10"></script>
-  <script src="js/content.js?v=10"></script>
-  <script src="js/main.js?v=10"></script>
+  <script src="js/supabase-config.js?v=12"></script>
+  <script src="js/storage.js?v=12"></script>
+  <script src="js/content.js?v=12"></script>
+  <script src="js/main.js?v=12"></script>
 </body>
 </html>

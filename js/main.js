@@ -93,6 +93,22 @@
     });
   }
 
+  function isImageFile(file) {
+    return file.type.startsWith("image/");
+  }
+
+  function isPdfFile(file) {
+    return file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+  }
+
+  function isGalleryFile(file) {
+    return isImageFile(file) || isPdfFile(file);
+  }
+
+  function isPdfPath(name) {
+    return /\.pdf$/i.test(name || "");
+  }
+
   /* ── Photos ── */
   function getPhotos() {
     const seeded = (PORTFOLIO.photos || []).map((p) => ({ ...p, permanent: true }));
@@ -106,6 +122,7 @@
           src: p.src,
           path: p.path,
           cloud: true,
+          isPdf: isPdfPath(p.name),
         })),
       ];
     }
@@ -121,24 +138,37 @@
     if (!photos.length) {
       empty.hidden = false;
       empty.textContent = useCloud()
-        ? "No photos in Supabase yet — upload your first image above."
-        : "No photos yet — upload your first image above.";
+        ? "No photos or PDFs in Supabase yet — upload your first file above."
+        : "No photos or PDFs yet — upload your first file above.";
       return;
     }
     empty.hidden = true;
 
     photos.forEach((photo, i) => {
+      const isPdf = photo.isPdf || isPdfPath(photo.name) || photo.src?.includes("application/pdf");
       const card = el("figure", {
-        className: "photo-card reveal",
+        className: `photo-card reveal${isPdf ? " is-pdf" : ""}`,
         style: `--delay: ${i * 0.04}s`,
       });
 
-      const img = el("img", {
-        src: photo.src,
-        alt: photo.title || "Uploaded photo",
-        loading: "lazy",
-      });
-      img.addEventListener("click", () => openLightbox(photo.src, photo.title || photo.name || "Photo"));
+      if (isPdf) {
+        const tile = el("div", {
+          className: "photo-pdf-tile",
+          onClick: () => window.open(photo.src, "_blank", "noopener"),
+        }, [
+          el("strong", { text: "PDF" }),
+          el("span", { text: "Open document" }),
+        ]);
+        card.append(tile);
+      } else {
+        const img = el("img", {
+          src: photo.src,
+          alt: photo.title || "Uploaded photo",
+          loading: "lazy",
+        });
+        img.addEventListener("click", () => openLightbox(photo.src, photo.title || photo.name || "Photo"));
+        card.append(img);
+      }
 
       const caption = el("figcaption", { className: "photo-caption" }, [
         el("span", { text: photo.title || photo.name || "Untitled" }),
@@ -149,7 +179,7 @@
           el("button", {
             className: "item-delete",
             type: "button",
-            "aria-label": "Remove photo",
+            "aria-label": "Remove file",
             title: "Remove",
             onClick: (e) => {
               e.stopPropagation();
@@ -159,7 +189,7 @@
         );
       }
 
-      card.append(img, caption);
+      card.append(caption);
       grid.append(card);
     });
 
@@ -185,11 +215,14 @@
   }
 
   async function handlePhotoFiles(files) {
-    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (!list.length) return;
+    const list = Array.from(files).filter(isGalleryFile);
+    if (!list.length) {
+      setUploadStatus("photo", "Please choose image or PDF files.", true);
+      return;
+    }
 
     if (useCloud()) {
-      setUploadStatus("photo", `Uploading ${list.length} photo${list.length > 1 ? "s" : ""} to Supabase…`);
+      setUploadStatus("photo", `Uploading ${list.length} file${list.length > 1 ? "s" : ""} to Supabase…`);
       for (const file of list) {
         const { error } = await PortfolioStorage.uploadFile("photos", file);
         if (error) {
@@ -210,6 +243,7 @@
         name: file.name,
         title: file.name.replace(/\.[^.]+$/, ""),
         src,
+        isPdf: isPdfFile(file),
         uploadedAt: new Date().toISOString(),
       });
     }
@@ -337,7 +371,7 @@
     if (!list.length) return;
 
     if (useCloud()) {
-      setUploadStatus("script", `Uploading ${list.length} script${list.length > 1 ? "s" : ""} to Supabase…`);
+      setUploadStatus("script", `Uploading ${list.length} file${list.length > 1 ? "s" : ""} to Supabase…`);
       for (const file of list) {
         const { error } = await PortfolioStorage.uploadFile("scripts", file);
         if (error) {
@@ -352,6 +386,22 @@
 
     const stored = loadStore(SCRIPT_KEY);
     for (const file of list) {
+      if (isPdfFile(file)) {
+        const src = await readAsDataURL(file);
+        stored.unshift({
+          id: uid(),
+          name: file.name,
+          title: file.name,
+          language: "PDF",
+          description: `Uploaded ${new Date().toLocaleDateString()}`,
+          preview: "PDF document — open to view.",
+          content: "",
+          src,
+          isPdf: true,
+          uploadedAt: new Date().toISOString(),
+        });
+        continue;
+      }
       const content = await readAsText(file);
       stored.unshift({
         id: uid(),
