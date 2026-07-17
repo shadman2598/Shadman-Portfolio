@@ -239,10 +239,9 @@
         alt: photo.title || "Uploaded photo",
         loading: "lazy",
       });
-      img.addEventListener("click", () => {
-        if (photo.pdfSource) openPdfViewer(photo.pdfSource, photo.title || photo.name);
-        else openLightbox(photo.src, photo.title || photo.name || "Photo");
-      });
+        img.addEventListener("click", () => {
+          openLightbox(photo.src, photo.title || photo.name || "Photo");
+        });
       card.append(img);
     }
 
@@ -699,26 +698,16 @@
 
   /* ── Lightbox & modals ── */
   /* ── Lightbox & PDF viewer ── */
-  function showCleanModal(modal) {
-    document.documentElement.classList.add("modal-open");
-    document.body.classList.add("modal-open");
-    if (!modal.open) modal.showModal();
-  }
-
-  function closeCleanModal(modal) {
-    if (modal.open) modal.close();
-    document.documentElement.classList.remove("modal-open");
-    document.body.classList.remove("modal-open");
-  }
-
-  function openLightbox(src, caption) {
-    const modal = document.getElementById("lightbox-modal");
+  function clearLightbox() {
     const img = document.getElementById("lightbox-img");
     const pdfFrame = document.getElementById("lightbox-pdf");
     const pages = document.getElementById("lightbox-pdf-pages");
-    img.hidden = false;
-    img.src = src;
-    img.alt = caption;
+    const caption = document.getElementById("lightbox-caption");
+    if (img) {
+      img.hidden = true;
+      img.removeAttribute("src");
+      img.alt = "";
+    }
     if (pdfFrame) {
       pdfFrame.hidden = true;
       pdfFrame.removeAttribute("src");
@@ -727,32 +716,55 @@
       pages.hidden = true;
       pages.innerHTML = "";
     }
+    if (caption) caption.textContent = "";
+  }
+
+  function clearDetailModal() {
+    const body = document.getElementById("modal-body");
+    if (body) body.innerHTML = "";
+  }
+
+  function showCleanModal(modal) {
+    document.documentElement.classList.add("modal-open");
+    document.body.classList.add("modal-open");
+    if (!modal.open) modal.showModal();
+  }
+
+  function closeCleanModal(modal) {
+    if (modal.id === "lightbox-modal") clearLightbox();
+    if (modal.id === "detail-modal") clearDetailModal();
+    if (modal.open) modal.close();
+    document.documentElement.classList.remove("modal-open");
+    document.body.classList.remove("modal-open");
+  }
+
+  function openLightbox(src, caption) {
+    const modal = document.getElementById("lightbox-modal");
+    clearLightbox();
+    const img = document.getElementById("lightbox-img");
+    img.hidden = false;
+    img.src = src;
+    img.alt = caption;
     document.getElementById("lightbox-caption").textContent = caption;
     showCleanModal(modal);
   }
 
   async function openPdfViewer(src, caption) {
     const modal = document.getElementById("lightbox-modal");
-    const img = document.getElementById("lightbox-img");
+    clearLightbox();
     const pdfFrame = document.getElementById("lightbox-pdf");
     const pages = document.getElementById("lightbox-pdf-pages");
-    img.hidden = true;
-    img.removeAttribute("src");
     document.getElementById("lightbox-caption").textContent = caption || "PDF";
 
     if (pages) {
       pages.hidden = false;
       pages.innerHTML = "<p class='pdf-loading'>Loading PDF pages…</p>";
     }
-    if (pdfFrame) {
-      pdfFrame.hidden = true;
-      pdfFrame.removeAttribute("src");
-    }
     showCleanModal(modal);
 
     try {
       const rendered = await PortfolioPdf.renderAllPages(src, 1100);
-      if (!pages) return;
+      if (!pages || !modal.open) return;
       pages.innerHTML = "";
       if (!rendered.length) {
         pages.innerHTML = "<p>Could not display this PDF.</p>";
@@ -769,6 +781,7 @@
       });
     } catch (err) {
       console.error(err);
+      if (!modal.open) return;
       if (pages) {
         pages.innerHTML = "";
         pages.hidden = true;
@@ -784,15 +797,18 @@
     document.querySelectorAll(".modal").forEach((modal) => {
       modal.querySelector(".modal-close")?.addEventListener("click", () => closeCleanModal(modal));
       modal.addEventListener("click", (e) => {
-        if (e.target === modal && !modal.classList.contains("lightbox")) {
-          closeCleanModal(modal);
-        }
+        if (e.target === modal) closeCleanModal(modal);
       });
       modal.addEventListener("close", () => {
+        if (modal.id === "lightbox-modal") clearLightbox();
+        if (modal.id === "detail-modal") clearDetailModal();
         document.documentElement.classList.remove("modal-open");
         document.body.classList.remove("modal-open");
       });
     });
+    // Ensure closed dialogs never leave leftover media in the page
+    clearLightbox();
+    clearDetailModal();
   }
 
   function setupNav() {
